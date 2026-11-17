@@ -26,36 +26,23 @@ async function startServer() {
   app.use(express.json());
 
   // In-memory order store for demo
-  const orders = new Map<string, any>([
-    ['GBY-98421', {
-      orderId: 'GBY-98421',
-      items: [{ name: 'Heavy Cotton Raw Denim Cargo Hoodie', price: 185, qty: 1 }],
-      total: 185,
-      status: 'Shipped',
-      estimatedDelivery: 'Nov 20, 2026',
-      shippingAddress: '742 Evergreen Terrace, Springfield',
-      date: '2026-11-14'
-    }],
-    ['GBY-44120', {
-      orderId: 'GBY-44120',
-      items: [{ name: 'Artisanal Botanical Serum No. 3', price: 68, qty: 2 }],
-      total: 136,
-      status: 'Processing',
-      estimatedDelivery: 'Nov 22, 2026',
-      shippingAddress: '100 Market St, San Francisco, CA',
-      date: '2026-11-16'
-    }]
-  ]);
+  const orders = new Map<string, any>();
 
   // API Routes
   app.post('/api/ai/concierge', async (req, res) => {
     try {
-      const { prompt, history } = req.body;
+      const { prompt, language } = req.body;
       if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
 
-      const systemInstruction = `You are Gebyian AI, an expert, sophisticated, and warm personal shopping concierge for Gebyian Network, an elite curated multi-category e-commerce platform featuring artisanal goods, streetwear apparel, precision tech gear, and luxury lifestyle items. Help customers discover products, advise on sizing, materials, styling, and gift recommendations with refined taste and concise answers.`;
+      const langContext = language === 'rw' 
+        ? 'Respond in Kinyarwanda.' 
+        : language === 'fr' 
+        ? 'Respond in French.' 
+        : 'Respond in English.';
+
+      const systemInstruction = `You are Gebyian Agro AI, an expert veterinary and agricultural advisor for Gebyian Network, a premier e-commerce platform specializing in live livestock (cows, goats, pigs, chickens), processed meat, and animal feeds (maize bran, broiler mash, cattle concentrates). Help farmers and buyers with livestock selection, feeding ratios, veterinary advice, and cold-chain purchasing in Rwanda and East Africa. ${langContext}`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-4-hydrogen',
@@ -65,27 +52,26 @@ async function startServer() {
         },
       });
 
-      res.json({ text: response.text || "I'm here to help you navigate our curated collections at Gebyian Network." });
+      res.json({ text: response.text || "I am here to assist you with livestock and animal feeds." });
     } catch (error: any) {
       console.error('Gemini AI Concierge Error:', error);
-      res.status(500).json({ error: error.message || 'Failed to generate concierge response' });
+      res.status(500).json({ error: error.message || 'Failed to generate AI response' });
     }
   });
 
   app.post('/api/orders', (req, res) => {
     try {
-      const { items, total, shippingAddress, customerName, email, phone } = req.body;
-      const orderId = `GBY-${Math.floor(10000 + Math.random() * 90000)}`;
+      const { items, total, shippingAddress, customerName, phone } = req.body;
+      const orderId = `GBY-${Math.floor(100000 + Math.random() * 900000)}`;
       const newOrder = {
         orderId,
         items,
         total,
         shippingAddress,
         customerName,
-        email,
         phone,
-        status: 'Confirmed & Processing',
-        estimatedDelivery: '3-5 Business Days',
+        status: 'Confirmed & Dispatching via Cold-Chain',
+        estimatedDelivery: '24-48 Hours',
         date: new Date().toISOString().split('T')[0]
       };
       orders.set(orderId, newOrder);
@@ -93,15 +79,6 @@ async function startServer() {
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
-  });
-
-  app.get('/api/orders/:id', (req, res) => {
-    const orderId = req.params.id.toUpperCase();
-    const order = orders.get(orderId);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found in Gebyian Network records.' });
-    }
-    res.json(order);
   });
 
   // Vite middleware for development or static serving for production
