@@ -1,0 +1,6 @@
+{
+  "name": "Gebyian Network E-Commerce Platform",
+  "description": "An elite curated multi-category e-commerce platform and merchant network for artisan goods, streetwear apparel, precision tech hardware, and luxury lifestyle products.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
